@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react';
 import {
   StyleSheet,
   Dimensions,
@@ -7,118 +7,117 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-} from 'react-native'
-import * as Animatable from 'react-native-animatable'
+  Animated,
+} from 'react-native';
+import * as Animatable from 'react-native-animatable';
+
+import Constants from '../constants';
+
+import _ from 'lodash';
 
 const transitionProps = {
-  hoverbar: ['top', 'left', 'height', 'width', 'shadowRadius', 'borderRadius', 'backgroundColor'],
-  square: ['top', 'opacity'],
-  destinationBox: ['left', 'top', 'height', 'opacity', 'width'],
+  hoverbar: ['top', 'left', 'height'],
+  square: ['opacity'],
+  destinationBox: ['opacity'],
   sourceBox: ['opacity'],
-  destinationText: ['top', 'left', 'fontSize', 'color', 'opacity'],
-  sourceText: ['opacity'],
-  verticalBar: ['height', 'opacity'],
+  destinationText: ['opacity'],
+  verticalBar: ['opacity'],
   dot: ['opacity'],
 }
 
 const SQUARE_SIZE = 6;
-
-const Animatable.TextInput = Animatable.createAnimatableComponent(TextInput);
+const PADDING_SIDES = 6;
 
 export default class SearchHeader extends Component {
 
-  static defaultProps = {
-    expanded: false,
-    onPress: () => {},
-    onSourceTextChange: () => {},
-    onDestinationTextChange: () => {},
-    sourceText: '',
-    destinationText: '',
-  }
-
   onSourceTextChange = (sourceText) => {
-    const {onSourceTextChange} = this.props
+    const {onSourceTextChange} = this.props;
 
-    this.setState({sourceText})
-    onSourceTextChange(sourceText)
+    this.setState({sourceText});
+    onSourceTextChange(sourceText);
   }
 
   onDestinationTextChange = (destinationText) => {
-    const {onDestinationTextChange} = this.props
+    const {onDestinationTextChange} = this.props;
 
-    onDestinationTextChange(destinationText)
+    onDestinationTextChange(destinationText);
+  }
+
+  onSourceTextFocus = () => {
+    const {onTextInputFocus} = this.props;
+
+    onTextInputFocus(Constants.searchHeader.SOURCE_INPUT);
+  }
+
+  onDestinationTextFocus = () => {
+    const {onTextInputFocus} = this.props;
+
+    onTextInputFocus(Constants.searchHeader.DESTINATION_INPUT);
   }
 
   onExpand = () => {
-    const {onPress} = this.props
+    const {onPress} = this.props;
 
-    onPress()
+    onPress();
 
     setTimeout(() => {
       if (!this.refs.destinationInput) return
 
-      this.refs.destinationInput.focus()
-    }, 350)
+      this.refs.destinationInput.focus();
+    }, 350);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.expanded === this.props.expanded) return;
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    if (nextProps.expanded === this.props.expanded) return;
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (_.isEqual(this.props, nextProps)) return false;
+    return true;
   }
 
   getAnimatableStyles = () => {
-    const {expanded, sourceText, destinationText} = this.props
-    const {width: windowWidth} = Dimensions.get('window')
-    const width = windowWidth - 12
+    const {expanded, sourceText, destinationText, width} = this.props
+    // const {width: windowWidth} = Dimensions.get('window')
+    const paddedWidth = width - PADDING_SIDES*2;
 
     return {
       hoverbar: {
-        top: expanded ? 0 : 28,
+        top: expanded ? 0 : 36,
         left: expanded ? 0 : 6,
-        height: expanded ? 150 : 40,
-        width: expanded ? windowWidth : width,
+        height: expanded ? 124 : 48,
+        width: expanded ? width : paddedWidth,
         backgroundColor: expanded ? '#4CAF50' : '#FFF',
         borderRadius: expanded ? 0 : 2,
-        shadowRadius: expanded ? 10 / 2 : 60 / 2,
       },
       square: {
-        top: expanded ? 109 - 24 : 69 - 24,
-        left: 30 + 29,
+        transform: expanded ? [{translateY: 52}] : [{translateY: 0}],
         opacity: expanded ? 1 : 0,
       },
       destinationBox: {
-        left: expanded ? 30 + 56 : 6,
-        right: 24,
-        top: expanded ? 96 - 24 : 28,
-        width: expanded ? windowWidth - 86 - 24 : width,
-        height: expanded ? 32 : 40,
+        left: expanded ? 94 : 56,
+        top: expanded ? 72 + 12 : 28,
+        width: expanded ? width - 86 - 32 : paddedWidth,
+        height: expanded ? 32 : 48,
         opacity: expanded ? 1 : 0,
       },
       destinationText: {
-        left: expanded ? 30 + 65 : 48,
-        top: expanded ? 102 - 24 : 10,
-        fontSize: expanded ? 16 : 16,
-        color: expanded ? '#A4A4AC' : '#525760',
-        opacity: (expanded && destinationText.length !== 0) ? 0 : 1,
+        left: 56,
+        top: 12,
+        opacity: expanded ? 0 : 1,
       },
       sourceBox: {
-        left: 30 + 56,
-        right: 24,
-        height: 32,
-        top: 56 - 24,
         opacity: expanded ? 1 : 0,
       },
-      sourceText: {
-        left: 30 + 65,
-        top: 64 - 24,
-        fontSize: 16,
-        color: '#A4A4AC',
-        opacity: (!expanded || (expanded && sourceText.length !== 0)) ? 0 : 1,
-      },
       verticalBar: {
-        top: 78 - 24,
-        left: 30 + 32,
         height: expanded ? 28 : 0,
         opacity: expanded ? 1 : 0,
       },
       dot: {
-        top: 69 - 24,
-        left: 30 + 29.5,
         opacity: expanded ? 1 : 0,
       },
     }
@@ -129,69 +128,69 @@ export default class SearchHeader extends Component {
     const animatableStyles = this.getAnimatableStyles();
 
     return (
-      <View style={styles.container}>
+      <View
+        style={styles.container}
+      >
         <Animatable.View
           style={[styles.hoverbar, animatableStyles.hoverbar]}
           transition={transitionProps.hoverbar}
           easing="linear"
           duration={250}
-
         >
           <TouchableOpacity
             style={styles.target}
             onPress={expanded ? null : this.onExpand}
           />
-
           <Animatable.View
-            style={[styles.square, animatableStyles.square]}
-            transition={transitionProps.square}
+            style={[styles.sourceBox, animatableStyles.sourceBox]}
+            transition={transitionProps.sourceBox}
+            pointerEvents={'box-none'}
+            useNativeDriver
             easing="linear"
             duration={250}
-
-          />
-          <Animatable.Text
-            style={[styles.sourceText, animatableStyles.sourceText]}
-            transition={transitionProps.sourceText}
-            pointerEvents={'none'}
-            easing="linear"
-            duration={250}
-
           >
-            {sourceText.length === 0 ? 'Starting from?' : ''}
+            {expanded && (
+              <TextInput
+                selectTextOnFocus
+                ref={'sourceInput'}
+                underlineColorAndroid={'transparent'}
+                placeholder='Starting from?'
+                disableFullscreenUI
+                style={styles.input}
+                value={sourceText}
+                onChangeText={this.onSourceTextChange}
+                onFocus={this.onSourceTextFocus}
+              />
+            )}
+          </Animatable.View>
+          <Animatable.Text
+            style={[styles.destinationText, animatableStyles.destinationText]}
+            transition={transitionProps.destinationText}
+            pointerEvents={'none'}
+            useNativeDriver
+            easing="linear"
+            duration={250}
+          >
+            {expanded ? '' : !expanded && destinationText.length === 0 ? 'Where to?' : destinationText}
           </Animatable.Text>
           <Animatable.View
             style={[styles.destinationBox, animatableStyles.destinationBox]}
             transition={transitionProps.destinationBox}
             pointerEvents={'box-none'}
+            useNativeDriver
             easing="linear"
             duration={250}
-
           >
             {expanded && (
               <TextInput
                 ref={'destinationInput'}
                 underlineColorAndroid={'transparent'}
+                placeholder='Where to?'
+                disableFullscreenUI
                 style={styles.input}
                 value={destinationText}
                 onChangeText={this.onDestinationTextChange}
-              />
-            )}
-          </Animatable.View>
-          <Animatable.View
-            style={[styles.sourceBox, animatableStyles.sourceBox]}
-            transition={transitionProps.sourceBox}
-            pointerEvents={'box-none'}
-            easing="linear"
-            duration={250}
-
-          >
-            {expanded && (
-              <TextInput
-                ref={'sourceInput'}
-                underlineColorAndroid={'transparent'}
-                style={styles.input}
-                value={sourceText}
-                onChangeText={this.onSourceTextChange}
+                onFocus={this.onDestinationTextFocus}
               />
             )}
           </Animatable.View>
@@ -199,28 +198,25 @@ export default class SearchHeader extends Component {
             style={[styles.verticalBar, animatableStyles.verticalBar]}
             transition={transitionProps.verticalBar}
             pointerEvents={'none'}
+            useNativeDriver
             easing="linear"
             duration={250}
-
           />
           <Animatable.View
             style={[styles.dot, animatableStyles.dot]}
             transition={transitionProps.dot}
             pointerEvents={'none'}
+            useNativeDriver
             easing="linear"
             duration={250}
-
           />
-          <Animatable.Text
-            style={[styles.destinationText, animatableStyles.destinationText]}
-            transition={transitionProps.destinationText}
-            pointerEvents={'none'}
+          <Animatable.View
+            style={[styles.square, animatableStyles.square]}
+            transition={transitionProps.square}
+            useNativeDriver
             easing="linear"
             duration={250}
-
-          >
-            {destinationText.length === 0 ? 'Where to?' : destinationText}
-          </Animatable.Text>
+          />
         </Animatable.View>
       </View>
     );
@@ -230,8 +226,8 @@ export default class SearchHeader extends Component {
 const styles = StyleSheet.create({
   container: {
     zIndex: 1,
+    height: 136,
     width: '100%',
-    height: 180,
   },
   hoverbar: {
     position: 'absolute',
@@ -240,7 +236,7 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     zIndex: 1,
-    elevation: 2,
+    elevation: 4,
   },
   target: {
     flex: 1,
@@ -250,6 +246,8 @@ const styles = StyleSheet.create({
     width: SQUARE_SIZE,
     height: SQUARE_SIZE,
     backgroundColor: 'black',
+    top: 45,
+    left: 59.5 + 8,
     zIndex: 2,
   },
   dot: {
@@ -258,24 +256,26 @@ const styles = StyleSheet.create({
     height: SQUARE_SIZE,
     borderRadius: SQUARE_SIZE / 2,
     backgroundColor: '#54545C',
+    top: 45 + 12,
+    left: 59.5 + 8,
     zIndex: 2,
   },
   destinationBox: {
     position: 'absolute',
-    backgroundColor: '#EDEDED',
+    backgroundColor: '#F9F9F9',
+    right: 24,
+    left: 56,
+    top: 28,
     borderRadius: 4,
     zIndex: 3,
   },
   destinationText: {
     position: 'absolute',
     zIndex: 4,
-    backgroundColor: 'transparent',
-  },
-  sourceText: {
-    position: 'absolute',
-    zIndex: 4,
     color: '#525760',
-    opacity: 0,
+    fontSize: 18,
+    left: 56,
+    top: 12,
     backgroundColor: 'transparent',
   },
   sourceBox: {
@@ -283,20 +283,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9F9',
     borderRadius: 4,
     zIndex: 3,
+    left: 86 + 8,
+    right: 24,
+    height: 32,
+    top: 32 + 12,
   },
   verticalBar: {
     position: 'absolute',
     width: 1,
     backgroundColor: '#54545C',
     zIndex: 2,
+    height: 1,
+    top: 54 + 12,
+    left: 62 + 8,
   },
   input: {
     flex: 1,
     color: 'black',
     backgroundColor: 'transparent',
     zIndex: 10,
-    fontSize: 15,
+    fontSize: 16,
     paddingHorizontal: 10,
-    paddingBottom: 6,
+    paddingBottom: 4,
+    paddingTop: 4,
   },
-})
+});

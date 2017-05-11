@@ -7,11 +7,14 @@
     "test": "jest"
   },
   "dependencies": {
+    "lodash": "^4.17.4",
     "native-base": "^2.1.3",
     "react": "16.0.0-alpha.6",
     "react-native": "0.43.4",
     "react-native-animatable": "^1.2.0",
+    "react-native-geocoder": "^0.4.8",
     "react-native-maps": "^0.14.0",
+    "react-native-orientation": "git+https://github.com/yamill/react-native-orientation.git",
     "react-navigation": "^1.0.0-beta.9"
   },
   "devDependencies": {
