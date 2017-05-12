@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Dimensions, StyleSheet, View, TouchableNativeFeedback, StatusBar } from 'react-native';
 
 import MapView from 'react-native-maps';
-import { Container, Content, Icon, Button, Fab } from 'native-base';
+import { Container, Icon } from 'native-base';
 import Geocoder from 'react-native-geocoder';
 import RNGooglePlaces from 'react-native-google-places';
 
@@ -14,63 +14,20 @@ import Constants from '../constants'
 
 import _ from 'lodash';
 
-const allLocations = [
-  {id: 0, icon: 'home', title: 'Students\' Union Building', subtitle: '8900 114 St NW Edmonton, AB T6G 2S4'},
-  {id: 1, icon: 'timer', title: 'General Services Building', subtitle: 'General Services Building, University Campus Northwest, Edmonton, AB T6G 2H1'},
-  {id: 2, icon: 'timer', title: 'Lister Centre', subtitle: '11613 87 Ave NW, Edmonton, AB T6G 2H6'},
-  {id: 3, icon: 'timer', title: 'Jubilee Auditorium', subtitle: '11455 87 Ave NW, Edmonton, AB T6G 2T2'},
-  {id: 4, icon: 'timer', title: 'Health Sciences Jubilee Station', subtitle: '114 St NW, Edmonton, AB T6G 2V2'},
-  {id: 5, icon: 'home', title: 'Walter C. Mackenzie Health Sciences Centre', subtitle: '8440 112 St NW, Edmonton, AB T6G 2B7'},
-  {id: 7, icon: 'timer', title: 'Katz Group Centre', subtitle: '114 St NW and 87 Ave NW, Edmonton, AB T6G 2R7'},
-  {id: 8, icon: 'timer', title: 'Timms Centre', subtitle: 'Timms Centre for the Arts, University of Alberta, 87 Avenue 112 St NW, Edmonton, AB T6G 2C9'},
-  {id: 9, icon: 'timer', title: 'Law Centre', subtitle: '111 89 Ave NW, Edmonton, AB T6G 2H5'},
-  {id: 10, icon: 'home', title: 'Fine Arts Building', subtitle: 'Fine Arts Building, University of Alberta, Edmonton, AB T6G 2C9'},
-  {id: 11, icon: 'timer', title: 'University Transit Centre', subtitle: 'University Transit Center, 89 Ave NW, Edmonton, AB T6G 2C5'},
-  {id: 12, icon: 'timer', title: 'HUB Mall', subtitle: 'HUB Mall, 112 St NW, Edmonton, AB, T6G 2C5'},
-  {id: 13, icon: 'timer', title: 'Rutherford Library', subtitle: 'Rutherford Library, 90 Ave NW, Edmonton, AB T6G 2J4'},
-  {id: 14, icon: 'timer', title: 'Humanities Centre ', subtitle: 'Humanities Centre, Saskatchewan Dr NW, Edmonton, AB T6G 2E5'},
-  {id: 15, icon: 'home', title: 'Tory Lecture Hall', subtitle: 'Tory Lecture Hall, Saskatchewan Dr NW, Edmonton, AB T6G 2E1'},
-  {id: 16, icon: 'timer', title: 'Alberta School of Business', subtitle: 'Alberta School of Business, Edmonton, AB T6G 2R6'},
-  {id: 17, icon: 'timer', title: 'Convocation Hall', subtitle: 'Convocation Hall, Edmonton, AB T6G 2E6'},
-  {id: 18, icon: 'timer', title: 'Dentistry/Pharmacy Centre', subtitle: 'Dentistry/Pharmacy Centre, Edmonton, AB T6G 2N8'},
-  {id: 19, icon: 'timer', title: 'North Power Plant', subtitle: 'North Power Plant, Edmonton, AB T6G 2N2'},
-  {id: 20, icon: 'timer', title: 'South Academic Building', subtitle: 'South Academic Building, Edmonton, AB T6G 2G7'},
-  {id: 21, icon: 'timer', title: 'Cameron Library', subtitle: 'Cameron Library, Edmonton, AB T6G 2J8'},
-  {id: 22, icon: 'timer', title: 'Earth Sciences Building', subtitle: 'Earth Sciences Building, Edmonton, AB T6G 2E3'},
-  {id: 23, icon: 'timer', title: 'St. Joseph\'s College', subtitle: '11325 89 Ave NW, Edmonton, AB T6G 2J5'},
-  {id: 24, icon: 'timer', title: 'Education Centre', subtitle: '11210 87 Ave NW, Edmonton, AB T6G 2T9'},
-  {id: 25, icon: 'timer', title: 'Central Academic Building', subtitle: 'Central Academic Building, Edmonton, AB T6G 2E8'},
-  {id: 26, icon: 'timer', title: 'Chemistry Building', subtitle: '11227 Saskatchewan Dr NW, Edmonton, AB T6G'},
-  {id: 27, icon: 'timer', title: 'Centennial Centre for Interdisciplinary Science', subtitle: '11335 Saskatchewan Dr NW, Edmonton, AB T6G 2M9'},
-  {id: 28, icon: 'timer', title: 'CCIS North Lecture Theatres', subtitle: 'CCIS North Lecture Theatres, Edmonton, AB T6G 2E9'},
-  {id: 29, icon: 'timer', title: 'Biological Sciences Centre', subtitle: 'Biological Sciences Centre, Edmonton, AB T6G 2E9'},
-  {id: 30, icon: 'timer', title: 'Assiniboia Hall', subtitle: 'Assiniboia Hall, Edmonton, AB T6G 2E7'},
-  {id: 31, icon: 'timer', title: 'Athabasca Hall', subtitle: 'Athabasca Hall, Edmonton, AB T6G 2E8'},
-  {id: 32, icon: 'timer', title: 'Pembina Hall', subtitle: 'Pembina Hall, Edmonton, AB T6G 2H8'},
-  {id: 33, icon: 'timer', title: 'Agriculture Forestry Centre', subtitle: 'Agriculture Forestry Centre, Edmonton, AB T6G 2P5'},
-  {id: 34, icon: 'timer', title: 'Natural Resources Engineering Facility', subtitle: '9105 116 St NW, Edmonton, AB T6G 2W2'},
-  {id: 35, icon: 'timer', title: 'Morrison Structural Engineering Laboratory', subtitle: 'Morrison Structural Engineering Laboratory, Edmonton, AB T6G 2E9'},
-  {id: 36, icon: 'timer', title: 'Computing Scence Centre', subtitle: 'Computing Science Centre, Edmonton, AB T6G 2E8'},
-  {id: 37, icon: 'timer', title: 'Mechanical Engineering', subtitle: 'Mechanical Engineering, Edmonton, AB T6G 2G8'},
-  {id: 38, icon: 'timer', title: 'Chemical Materials Engineering', subtitle: 'Chemical Materials Engineering, 116 St NW, Edmonton, AB T6G 2V4'},
-  {id: 39, icon: 'timer', title: 'Engineering Teaching Learning Complex', subtitle: '9107 116 St NW, Edmonton, AB T6G 2V4'},
-  {id: 40, icon: 'timer', title: 'National Institute for Nanotechnology', subtitle: '11421 Saskatchewan Dr NW, Edmonton, AB T6G 2M9'}
-];
-
 export default class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
       searchResultsOpen: false,
+      showProgressBar: false,
       destinationText: '',
       destination: null,
       sourceText: '',
       source: null,
       focusedItem: '',
-      allLocations: allLocations,
-      filteredLocations: [],
       autocompleteLocations: [],
+      markers: [],
       timeoutId: 0,
       region: {
         latitude: 53.5238595,
@@ -83,6 +40,7 @@ export default class App extends Component {
     this._onRegionChange = this._onRegionChange.bind(this);
     this._onReceiveUpdPosition = this._onReceiveUpdPosition.bind(this);
     this._onToggleDrawer = this._onToggleDrawer.bind(this);
+    this._onUserSelectListItem = this._onUserSelectListItem.bind(this);
   }
 
   toggleSearchResults = () => {
@@ -132,10 +90,12 @@ export default class App extends Component {
 
     Geocoder.geocodePosition({lat, lng})
     .then(res => {
-      console.log(res[0]);
+
+      const name = `${res[0].streetNumber} ${res[0].streetName}`;
+
       this.setState({
-        sourceText: res[0].formattedAddress,
-        source: { address: res[0].formattedAddress, latitude: lat, longitude: lng },
+        sourceText: "Current Location",
+        source: { name, address: res[0].formattedAddress, latitude: lat, longitude: lng },
       });
     })
     .catch(err => console.error(err));
@@ -159,28 +119,35 @@ export default class App extends Component {
     }, () => console.log(this.state));
   }
 
-  _onUserSelectListItem = (item) => {
-    // console.log(itemId);
-    const {focusedItem} = this.state;
+  async _onUserSelectListItem(item) {
+    const { focusedItem } = this.state;
+    const { latitude, longitude } = await RNGooglePlaces.lookUpPlaceByID(item.placeID);
 
-    if (focusedItem === Constants.searchHeader.DESTINATION_INPUT) {
-      this.setState({
-        destinationText: item.primaryText,
-        destination: {
-          name: item.primaryText,
-          address: item.secondaryText,
-        }
-      });
-    } else {
-      this.setState({
-        sourceText: item.primaryText,
-        source: {
-          name: item.primaryText,
-          address: item.secondaryText,
-        }
-      });
-    }
+    const compiledLocation = {
+      name: item.primaryText,
+      address: item.secondaryText,
+      latitude,
+      longitude,
+    };
 
+    let compiledState = focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
+      { destinationText: item.primaryText, destination: compiledLocation } :
+      { sourceText: item.primaryText, source: compiledLocation };
+
+    this.setState(compiledState, this._onBothSrcDestSet);
+
+    // TODO: dispatch action to create request if destination and source are set.
+
+  }
+
+  _onBothSrcDestSet = () => {
+    this.setState({
+      searchResultsOpen: false,
+      markers: [this.state.source, this.state.destination]
+    }, () => {
+      console.log(this.map);
+      this.map.fitToElements(true);
+    });
   }
 
   _onToggleDrawer() {
@@ -198,8 +165,11 @@ export default class App extends Component {
   _onNoInputTimeout = () => {
     const { focusedItem, destinationText, sourceText, region } = this.state;
 
-    const searchText = focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
-      destinationText : sourceText
+    const searchText =
+      focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
+      destinationText : sourceText;
+
+    this.setState({showProgressBar: true});
 
     RNGooglePlaces.getAutocompletePredictions(searchText, {
       type: 'establishments',
@@ -208,7 +178,10 @@ export default class App extends Component {
       radius: 0.5
     })
     .then((places) => {
-      this.setState({autocompleteLocations: places});
+      this.setState({
+        autocompleteLocations: places,
+        showProgressBar: false
+      });
     })
     .catch(error => console.log(error.message));
   }
@@ -220,7 +193,7 @@ export default class App extends Component {
 
     this.setState( {
       destinationText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 2000),
+      timeoutId: setTimeout(this._onNoInputTimeout, 1000),
     } );
   }
 
@@ -229,7 +202,7 @@ export default class App extends Component {
 
     this.setState( {
       sourceText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 2000),
+      timeoutId: setTimeout(this._onNoInputTimeout, 1000),
     } );
   }
 
@@ -246,12 +219,9 @@ export default class App extends Component {
       searchResultsOpen,
       width,
       height,
-      filteredLocations,
       autocompleteLocations,
-      allLocations
+      showProgressBar
     } = this.state;
-
-    const locationList = filteredLocations.length ? filteredLocations : allLocations;
 
     console.log(autocompleteLocations);
 
@@ -294,6 +264,7 @@ export default class App extends Component {
           visible={searchResultsOpen}>
           <SearchResultsList
             list={autocompleteLocations}
+            showProgressBar={showProgressBar}
             onUserSelectListItem={this._onUserSelectListItem} />
         </LocationSearchResults>
 
@@ -312,10 +283,35 @@ export default class App extends Component {
         <MapView
           showsUserLocation
           showsMyLocationButton={false}
+          showsCompass={false}
           style={styles.map}
           ref={map => this.map = map}
           initialRegion={this.state.region}
-          onRegionChange={this._onRegionChange}/>
+          onRegionChange={this._onRegionChange}>
+
+          {this.state.markers.map(({name, address, latitude, longitude}, index) =>
+            (<MapView.Marker
+              key={index}
+              coordinate={{latitude, longitude}}
+              title={name}/>
+            )
+          )}
+
+          {this.state.markers.length !== 0 && (
+            <MapView.Polyline
+              coordinates={this.state.markers.reduce(
+                (memo, {latitude, longitude}) =>
+                  {memo.push({latitude, longitude}); return memo;},
+                []
+              )}
+              lineCap="square"
+              miterLimit={1}
+              geodesic={true}
+              strokeWidth={2}
+            />
+          )}
+
+        </MapView>
 
       </Container>
     );

@@ -1,5 +1,6 @@
-import React, { Component } from 'react'
-import { ListView, View, Text, StyleSheet } from 'react-native'
+import React, { Component } from 'react';
+import { ListView, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { Card, CardContent } from 'native-base';
 
 import SearchResultsRow from './SearchResultsRow'
 
@@ -7,7 +8,7 @@ import SearchResultsRow from './SearchResultsRow'
 const rowHasChanged = (r1, r2) => r1.placeID !== r2.placeID;
 
 // DataSource template object
-const ds = new ListView.DataSource({rowHasChanged})
+const ds = new ListView.DataSource({rowHasChanged});
 
 export default class SearchResultsList extends Component {
   constructor(props) {
@@ -19,7 +20,6 @@ export default class SearchResultsList extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    // if (this.props.list.length === 0 && nextProps.list.length === 0) return;
     this.setState({
       dataSource: ds.cloneWithRows(nextProps.list)
     });
@@ -54,6 +54,21 @@ export default class SearchResultsList extends Component {
   }
 
   render() {
+
+    if (this.props.list.length === 0 && !this.props.showProgressBar) {
+      return (
+        <Text>{"Placeholder for instructional text"}</Text>
+      );
+    } else if (this.props.showProgressBar) {
+      return (
+        <ActivityIndicator
+          size="large"
+          color="#4CAF50"
+          animating={this.props.showProgressBar}
+        />
+      );
+    }
+
     return (
       <ListView
         style={styles.container}

@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  Animated,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 
@@ -124,7 +123,7 @@ export default class SearchHeader extends Component {
   }
 
   render() {
-    const {expanded, sourceText, destinationText} = this.props;
+    const {expanded, sourceText, destinationText, showProgressBar} = this.props;
     const animatableStyles = this.getAnimatableStyles();
 
     return (
