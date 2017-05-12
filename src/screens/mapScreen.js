@@ -107,7 +107,6 @@ export default class App extends Component {
   }
 
   _onLayout = () => {
-
     const {
       width: windowWidth,
       height: windowHeight,
@@ -135,9 +134,6 @@ export default class App extends Component {
       { sourceText: item.primaryText, source: compiledLocation };
 
     this.setState(compiledState, this._onBothSrcDestSet);
-
-    // TODO: dispatch action to create request if destination and source are set.
-
   }
 
   _onBothSrcDestSet = () => {
@@ -146,7 +142,6 @@ export default class App extends Component {
       markers: [this.state.source, this.state.destination],
       polyLineCoords: BezierCurve(this.state.source, this.state.destination)
     }, () => {
-      // console.log(this.map);
       setTimeout(() => this.map.fitToElements(true), 250);
     });
   }
@@ -223,8 +218,6 @@ export default class App extends Component {
       autocompleteLocations,
       showProgressBar
     } = this.state;
-
-    // console.log(autocompleteLocations);
 
     return (
       <Container

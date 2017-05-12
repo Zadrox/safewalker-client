@@ -6,17 +6,21 @@ const midpoint = (src, dest) => {
 }
 
 const calcBez = (src, mid, dest, stepping, sSq, invStepping, invSSq) =>
-  invSSq * src + 2 * invStepping * stepping * mid + sSq * dest;
+  (invSSq * src) + (2 * invStepping * stepping * mid) + (sSq * dest);
 
-export default BezierCurve = function(src, dest, arcHeight = 0.01, skew = 0.05, up = true) {
+export default BezierCurve = function(src, dest) {
   const mid = midpoint(src, dest);
   const curvepts = [];
 
-  if (Math.abs(src.latitude - dest.latitude < 0.0002)) {
-    mid.latitude += Math.abs(src.latitude - dest.latitude)/4;
-  } else if (Math.abs(src.longitude - dest.longitude < 0.0002)) {
-    mid.longitude += Math.abs(src.longitude - dest.longitude)/4;
-  } else if (src.longitude > dest.longitude) {
+  if (Math.abs(src.latitude - dest.latitude) < 0.0002) {
+    console.log(mid.latitude);
+    mid.latitude += Math.abs(src.longitude - dest.longitude);
+    console.log(mid.latitude);
+  } else if (Math.abs(src.longitude - dest.longitude) < 0.0002) {
+    console.log(mid.longitude);
+    mid.longitude += Math.abs(src.latitude - dest.latitude);
+    console.log(mid.longitude);
+  } else if (src.latitude > dest.latitude) {
     mid.latitude = src.latitude;
   } else {
     mid.latitude = dest.latitude;
@@ -24,7 +28,7 @@ export default BezierCurve = function(src, dest, arcHeight = 0.01, skew = 0.05, 
 
   curvepts.push({latitude: src.latitude, longitude: src.longitude});
 
-  const step = 1.0/20;
+  const step = 1.0/33;
 
   for (let stepping = 0; stepping <= 1.0; stepping += step) {
       const invStepping = (1.0 - stepping);
