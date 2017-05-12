@@ -18,7 +18,7 @@ export default class SearchResultsRow extends Component {
   }
 
   render() {
-    const {icon, title, subtitle} = this.props;
+    const {title, subtitle} = this.props;
 
     return (
       <TouchableNativeFeedback
@@ -26,11 +26,6 @@ export default class SearchResultsRow extends Component {
         onPress={this._onUserSelectListItem}>
       <View
         style={styles.container}>
-        <View
-          style={styles.iconContainer}
-          pointerEvents={'none'}>
-          <Icon name={icon} />
-        </View>
         <View
           style={styles.textContainer}
           pointerEvents={'none'}>
@@ -57,14 +52,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     height: 56,
     flexDirection: 'row',
-  },
-  iconContainer: {
-    marginRight: 25,
-    justifyContent: 'center',
-  },
-  icon: {
-    width: 15,
-    height: 15,
   },
   textContainer: {
     flex: 1,

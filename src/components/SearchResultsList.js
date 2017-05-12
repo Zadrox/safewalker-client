@@ -4,7 +4,7 @@ import { ListView, View, Text, StyleSheet } from 'react-native'
 import SearchResultsRow from './SearchResultsRow'
 
 // Row comparison function
-const rowHasChanged = (r1, r2) => r1.id !== r2.id
+const rowHasChanged = (r1, r2) => r1.placeID !== r2.placeID;
 
 // DataSource template object
 const ds = new ListView.DataSource({rowHasChanged})
@@ -25,10 +25,10 @@ export default class SearchResultsList extends Component {
     });
   }
 
-  _onPressListItem = (event) => {
+  _onPressListItem = (rowData) => {
     const { onUserSelectListItem } = this.props;
 
-    onUserSelectListItem(event.id);
+    onUserSelectListItem(rowData);
   }
 
   renderSeparator = (sectionID, rowID) => {
@@ -41,14 +41,14 @@ export default class SearchResultsList extends Component {
   }
 
   renderRow = (rowData) => {
-    const {title, subtitle, icon} = rowData;
+    // const {title, subtitle, icon} = rowData;
+    const { primaryText, secondaryText } = rowData;
 
     return (
       <SearchResultsRow
-        title={title}
-        subtitle={subtitle}
+        title={primaryText}
+        subtitle={secondaryText}
         onUserSelectListItem={() => this._onPressListItem(rowData)}
-        icon={icon}
       />
     );
   }

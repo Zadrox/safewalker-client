@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, View, TouchableNativeFeedback, StatusBar } from
 import MapView from 'react-native-maps';
 import { Container, Content, Icon, Button, Fab } from 'native-base';
 import Geocoder from 'react-native-geocoder';
+import RNGooglePlaces from 'react-native-google-places';
 
 import SearchHeader from '../components/searchHeader';
 import LocationSearchResults from '../components/LocationSearchResults';
@@ -63,10 +64,14 @@ export default class App extends Component {
     this.state = {
       searchResultsOpen: false,
       destinationText: '',
+      destination: null,
       sourceText: '',
+      source: null,
       focusedItem: '',
       allLocations: allLocations,
       filteredLocations: [],
+      autocompleteLocations: [],
+      timeoutId: 0,
       region: {
         latitude: 53.5238595,
         longitude: -113.5290916,
@@ -126,7 +131,13 @@ export default class App extends Component {
     const lng = location.coords.longitude;
 
     Geocoder.geocodePosition({lat, lng})
-    .then(res => this.setState({sourceText: res[0].formattedAddress}))
+    .then(res => {
+      console.log(res[0]);
+      this.setState({
+        sourceText: res[0].formattedAddress,
+        source: { address: res[0].formattedAddress, latitude: lat, longitude: lng },
+      });
+    })
     .catch(err => console.error(err));
 
     const latitudeDelta = this.state.region.latitudeDelta._value;
@@ -148,14 +159,26 @@ export default class App extends Component {
     }, () => console.log(this.state));
   }
 
-  _onUserSelectListItem = (itemId) => {
+  _onUserSelectListItem = (item) => {
     // console.log(itemId);
     const {focusedItem} = this.state;
 
     if (focusedItem === Constants.searchHeader.DESTINATION_INPUT) {
-      this.setState({destinationText: this.state.allLocations[itemId].title});
+      this.setState({
+        destinationText: item.primaryText,
+        destination: {
+          name: item.primaryText,
+          address: item.secondaryText,
+        }
+      });
     } else {
-      this.setState({sourceText: this.state.allLocations[itemId].title});
+      this.setState({
+        sourceText: item.primaryText,
+        source: {
+          name: item.primaryText,
+          address: item.secondaryText,
+        }
+      });
     }
 
   }
@@ -172,28 +195,42 @@ export default class App extends Component {
     this.setState({region});
   }
 
+  _onNoInputTimeout = () => {
+    const { focusedItem, destinationText, sourceText, region } = this.state;
+
+    const searchText = focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
+      destinationText : sourceText
+
+    RNGooglePlaces.getAutocompletePredictions(searchText, {
+      type: 'establishments',
+      latitude: this.state.region.latitude,
+      longitude: this.state.region.longitude,
+      radius: 0.5
+    })
+    .then((places) => {
+      this.setState({autocompleteLocations: places});
+    })
+    .catch(error => console.log(error.message));
+  }
+
   _onDestinationTextChange = (text) => {
     const destinationText = text;
-    //
-    this.setState(
-      { destinationText,
-        filteredLocations: this.state.allLocations.filter((location) => {
-          return location.title.includes(destinationText);
-        }),
-      }
-    );
+
+    clearTimeout(this.state.timeoutId);
+
+    this.setState( {
+      destinationText,
+      timeoutId: setTimeout(this._onNoInputTimeout, 2000),
+    } );
   }
 
   _onSourceTextChange = (text) => {
     const sourceText = text;
 
-    this.setState(
-      { sourceText,
-        filteredLocations: this.state.allLocations.filter((location) => {
-          return location.title.includes(sourceText);
-        })
-      }
-    );
+    this.setState( {
+      sourceText,
+      timeoutId: setTimeout(this._onNoInputTimeout, 2000),
+    } );
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -210,10 +247,13 @@ export default class App extends Component {
       width,
       height,
       filteredLocations,
+      autocompleteLocations,
       allLocations
     } = this.state;
 
     const locationList = filteredLocations.length ? filteredLocations : allLocations;
+
+    console.log(autocompleteLocations);
 
     return (
       <Container
@@ -253,7 +293,7 @@ export default class App extends Component {
           height={height}
           visible={searchResultsOpen}>
           <SearchResultsList
-            list={locationList}
+            list={autocompleteLocations}
             onUserSelectListItem={this._onUserSelectListItem} />
         </LocationSearchResults>
 

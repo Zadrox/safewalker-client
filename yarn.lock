@@ -3246,6 +3246,10 @@ react-native-geocoder@^0.4.8:
   version "0.4.8"
   resolved "https://registry.yarnpkg.com/react-native-geocoder/-/react-native-geocoder-0.4.8.tgz#4763ad0a45bd365061b80f52c06564fcc62658e1"
 
+react-native-google-places@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-google-places/-/react-native-google-places-2.1.0.tgz#93ceb61b1349fa19d320f32c77b0441985b42d5a"
+
 react-native-keyboard-aware-scroll-view@0.2.7:
   version "0.2.7"
   resolved "https://registry.yarnpkg.com/react-native-keyboard-aware-scroll-view/-/react-native-keyboard-aware-scroll-view-0.2.7.tgz#dd344cec25284b6314f1cc9d1b75ba267483c6b6"
