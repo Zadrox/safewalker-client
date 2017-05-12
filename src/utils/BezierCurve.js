@@ -13,13 +13,9 @@ export default BezierCurve = function(src, dest) {
   const curvepts = [];
 
   if (Math.abs(src.latitude - dest.latitude) < 0.0002) {
-    console.log(mid.latitude);
     mid.latitude += Math.abs(src.longitude - dest.longitude);
-    console.log(mid.latitude);
   } else if (Math.abs(src.longitude - dest.longitude) < 0.0002) {
-    console.log(mid.longitude);
     mid.longitude += Math.abs(src.latitude - dest.latitude);
-    console.log(mid.longitude);
   } else if (src.latitude > dest.latitude) {
     mid.latitude = src.latitude;
   } else {
