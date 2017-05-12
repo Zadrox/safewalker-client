@@ -9,6 +9,7 @@ import RNGooglePlaces from 'react-native-google-places';
 import SearchHeader from '../components/searchHeader';
 import LocationSearchResults from '../components/LocationSearchResults';
 import SearchResultsList from '../components/SearchResultsList';
+import BezierCurve from '../utils/BezierCurve';
 
 import Constants from '../constants'
 
@@ -50,7 +51,6 @@ export default class App extends Component {
       searchResultsOpen: !searchResultsOpen,
       destinationText: ''
     });
-
   }
 
   componentWillMount() {
@@ -143,10 +143,11 @@ export default class App extends Component {
   _onBothSrcDestSet = () => {
     this.setState({
       searchResultsOpen: false,
-      markers: [this.state.source, this.state.destination]
+      markers: [this.state.source, this.state.destination],
+      polyLineCoords: BezierCurve(this.state.source, this.state.destination)
     }, () => {
-      console.log(this.map);
-      this.map.fitToElements(true);
+      // console.log(this.map);
+      setTimeout(() => this.map.fitToElements(true), 250);
     });
   }
 
@@ -223,7 +224,7 @@ export default class App extends Component {
       showProgressBar
     } = this.state;
 
-    console.log(autocompleteLocations);
+    // console.log(autocompleteLocations);
 
     return (
       <Container
@@ -284,6 +285,7 @@ export default class App extends Component {
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
+          pitchEnabled={false}
           style={styles.map}
           ref={map => this.map = map}
           initialRegion={this.state.region}
@@ -299,14 +301,9 @@ export default class App extends Component {
 
           {this.state.markers.length !== 0 && (
             <MapView.Polyline
-              coordinates={this.state.markers.reduce(
-                (memo, {latitude, longitude}) =>
-                  {memo.push({latitude, longitude}); return memo;},
-                []
-              )}
+              coordinates={this.state.polyLineCoords}
               lineCap="square"
-              miterLimit={1}
-              geodesic={true}
+              miterLimit={10}
               strokeWidth={2}
             />
           )}
