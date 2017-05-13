@@ -15,6 +15,7 @@ import Constants from '../constants';
 import _ from 'lodash';
 
 const transitionProps = {
+  container: ['opacity'],
   hoverbar: ['top', 'left', 'height'],
   square: ['opacity'],
   destinationBox: ['opacity'],
@@ -80,11 +81,16 @@ export default class SearchHeader extends Component {
   }
 
   getAnimatableStyles = () => {
-    const {expanded, sourceText, destinationText, width} = this.props
+    const {visible, expanded, sourceText, destinationText, width} = this.props
     // const {width: windowWidth} = Dimensions.get('window')
     const paddedWidth = width - PADDING_SIDES*2;
 
     return {
+      container: {
+        height: expanded ? 136 : 90,
+        opacity: visible ? 1 : 0,
+        top: visible ? 0 : -136,
+      },
       hoverbar: {
         top: expanded ? 0 : 36,
         left: expanded ? 0 : 6,
@@ -123,12 +129,15 @@ export default class SearchHeader extends Component {
   }
 
   render() {
-    const {expanded, sourceText, destinationText, showProgressBar} = this.props;
+    const {expanded, sourceText, destinationText, showProgressBar, visible} = this.props;
     const animatableStyles = this.getAnimatableStyles();
 
     return (
-      <View
-        style={styles.container}
+      <Animatable.View
+        style={[styles.container, animatableStyles.container]}
+        transition={transitionProps.container}
+        easing="linear"
+        duration={250}
       >
         <Animatable.View
           style={[styles.hoverbar, animatableStyles.hoverbar]}
@@ -217,7 +226,7 @@ export default class SearchHeader extends Component {
             duration={250}
           />
         </Animatable.View>
-      </View>
+      </Animatable.View>
     );
   }
 }
@@ -225,7 +234,7 @@ export default class SearchHeader extends Component {
 const styles = StyleSheet.create({
   container: {
     zIndex: 1,
-    height: 136,
+    // height: 136,
     width: '100%',
   },
   hoverbar: {

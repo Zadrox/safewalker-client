@@ -6,9 +6,11 @@ import { Container, Icon } from 'native-base';
 import Geocoder from 'react-native-geocoder';
 import RNGooglePlaces from 'react-native-google-places';
 
-import SearchHeader from '../components/searchHeader';
+import SearchHeader from '../components/SearchHeader';
 import LocationSearchResults from '../components/LocationSearchResults';
 import SearchResultsList from '../components/SearchResultsList';
+import NavButton from '../components/NavButton';
+import PreviewRequest from '../components/PreviewRequest';
 import BezierCurve from '../utils/BezierCurve';
 
 import Constants from '../constants'
@@ -22,11 +24,13 @@ export default class App extends Component {
     this.state = {
       searchResultsOpen: false,
       showProgressBar: false,
+      previewRequestOpen: false,
       destinationText: '',
       destination: null,
       sourceText: '',
       source: null,
       focusedItem: '',
+      polyLineCoords: null,
       autocompleteLocations: [],
       markers: [],
       timeoutId: 0,
@@ -40,7 +44,6 @@ export default class App extends Component {
 
     this._onRegionChange = this._onRegionChange.bind(this);
     this._onReceiveUpdPosition = this._onReceiveUpdPosition.bind(this);
-    this._onToggleDrawer = this._onToggleDrawer.bind(this);
     this._onUserSelectListItem = this._onUserSelectListItem.bind(this);
   }
 
@@ -90,7 +93,6 @@ export default class App extends Component {
 
     Geocoder.geocodePosition({lat, lng})
     .then(res => {
-
       const name = `${res[0].streetNumber} ${res[0].streetName}`;
 
       this.setState({
@@ -99,9 +101,6 @@ export default class App extends Component {
       });
     })
     .catch(err => console.error(err));
-
-    const latitudeDelta = this.state.region.latitudeDelta._value;
-    const longitudeDelta = this.state.region.longitudeDelta._value;
 
     this.map.animateToCoordinate(location.coords, 1000);
   }
@@ -139,15 +138,44 @@ export default class App extends Component {
   _onBothSrcDestSet = () => {
     this.setState({
       searchResultsOpen: false,
+      previewRequestOpen: true,
       markers: [this.state.source, this.state.destination],
       polyLineCoords: BezierCurve(this.state.source, this.state.destination)
     }, () => {
-      setTimeout(() => this.map.fitToElements(true), 250);
+      this.map.fitToCoordinates(
+        this.state.polyLineCoords,
+        {
+          edgePadding: {
+            top: 150,
+            right: 25,
+            bottom: 350,
+            left: 25,
+          },
+        animated: true
+        }
+      );
     });
   }
 
-  _onToggleDrawer() {
+  toggleDrawer = () => {
     this.props.navigation.navigate('DrawerOpen');
+  }
+
+  cancelRequest = () => {
+    // TODO: need to reest state.
+
+    this.setState({
+      previewRequestOpen: false,
+      destination: null,
+      destinationText: "",
+      markers: [],
+      autocompleteLocations: [],
+      polyLineCoords: null,
+    });
+  }
+
+  submitRequest = () => {
+    // TODO: dispatch action to say I want somebody to come!
   }
 
   _onTextInputFocus = (focusedItem) => {
@@ -189,7 +217,7 @@ export default class App extends Component {
 
     this.setState( {
       destinationText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 1000),
+      timeoutId: setTimeout(this._onNoInputTimeout, 750),
     } );
   }
 
@@ -198,7 +226,7 @@ export default class App extends Component {
 
     this.setState( {
       sourceText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 1000),
+      timeoutId: setTimeout(this._onNoInputTimeout, 750),
     } );
   }
 
@@ -213,6 +241,7 @@ export default class App extends Component {
       sourceText,
       destinationText,
       searchResultsOpen,
+      previewRequestOpen,
       width,
       height,
       autocompleteLocations,
@@ -227,25 +256,18 @@ export default class App extends Component {
           translucent
           backgroundColor='rgba(100, 100, 100, 0.4)'
         />
-        <View
-          style={styles.navButtonContainer}>
-          <TouchableNativeFeedback
-            onPress={searchResultsOpen ? this.toggleSearchResults : this._onToggleDrawer}
-            background={TouchableNativeFeedback.SelectableBackgroundBorderless()}>
-            <View
-              style={styles.navButton}>
-              <Icon
-                style={{fontSize: 24}}
-                name={searchResultsOpen ? "arrow-back" : "menu"}
-              />
-            </View>
-          </TouchableNativeFeedback>
-        </View>
+        <NavButton
+          searchResultsOpen={searchResultsOpen}
+          previewRequestOpen={previewRequestOpen}
+          toggleSearchResults={this.toggleSearchResults}
+          toggleDrawer={this.toggleDrawer}
+          cancelRequest={this.cancelRequest} />
 
         <SearchHeader
           width={width}
           onTextInputFocus={this._onTextInputFocus}
           expanded={searchResultsOpen}
+          visible={!previewRequestOpen}
           sourceText={sourceText}
           destinationText={destinationText}
           onDestinationTextChange={this._onDestinationTextChange}
@@ -263,7 +285,7 @@ export default class App extends Component {
         </LocationSearchResults>
 
         <View
-          style={[styles.locationButtonContainer, {opacity: searchResultsOpen ? 0 : 1}]}>
+          style={[styles.locationButtonContainer, {opacity: searchResultsOpen || previewRequestOpen ? 0 : 1}]}>
           <TouchableNativeFeedback
             onPress={this._retrieveLocation}
             background={TouchableNativeFeedback.SelectableBackgroundBorderless()}>
@@ -274,11 +296,17 @@ export default class App extends Component {
           </TouchableNativeFeedback>
         </View>
 
+        <PreviewRequest
+          visible={previewRequestOpen}
+          width={width}
+          height={height}/>
+
         <MapView
           showsUserLocation
           showsMyLocationButton={false}
           showsCompass={false}
           pitchEnabled={false}
+          showsPointsOfInterest={false}
           style={styles.map}
           ref={map => this.map = map}
           initialRegion={this.state.region}
@@ -309,23 +337,6 @@ export default class App extends Component {
 }
 
 const styles = {
-  navButtonContainer: {
-    position: 'absolute',
-    zIndex: 6,
-    marginTop: 32,
-    marginLeft: 6,
-    borderRadius: 28,
-    width: 56,
-    height: 56,
-    backgroundColor: 'transparent',
-  },
-  navButton: {
-    flex: 1,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
   locationButtonContainer: {
     position: 'absolute',
     borderRadius: 28,

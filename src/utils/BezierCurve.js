@@ -28,8 +28,8 @@ export default BezierCurve = function(src, dest) {
 
   for (let stepping = 0; stepping <= 1.0; stepping += step) {
       const invStepping = (1.0 - stepping);
-      const invSteppingSq = invStepping**2;
-      const steppingSquared = stepping**2;
+      const invSteppingSq = Math.pow(invStepping, 2);
+      const steppingSquared = Math.pow(stepping, 2);
 
       const longitude = calcBez(src.longitude, mid.longitude, dest.longitude,
         stepping, steppingSquared, invStepping, invSteppingSq);
