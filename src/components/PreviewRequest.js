@@ -5,6 +5,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Image,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { Button } from 'native-base';
@@ -17,9 +18,11 @@ export default class PreviewRequest extends Component {
       height: windowHeight,
     } = this.props;
 
+    const containerHeader = 175;
+
     const style = {
-      top: visible ? 424 : windowHeight,
-      height: windowHeight - 424,
+      top: visible ? windowHeight - containerHeader : windowHeight,
+      height: containerHeader,
       width: windowWidth - 32,
     }
 
@@ -34,7 +37,11 @@ export default class PreviewRequest extends Component {
         easing="ease-out"
         transition={["top", "height", "width"]}>
         <View style={styles.content}>
-          <Text>{"Services provided by the Student's Union of the University of Alberta"}</Text>
+          <Text>{"Services provided by:"}</Text>
+          <Image
+            style={{width: style.width - 32, height: style.height - 115}}
+            resizeMode="contain"
+            source={{uri: 'https://subprint.ca/images/website/su_logo_footer.png'}}/>
         </View>
         <View style={styles.separator} />
         <Button
@@ -54,7 +61,8 @@ const styles = StyleSheet.create({
     elevation: 8,
     marginLeft: 16,
     marginRight: 16,
-    borderRadius: 4,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
     zIndex: 1,
     position: 'absolute',
     backgroundColor: 'white',

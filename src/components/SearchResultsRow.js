@@ -24,11 +24,8 @@ export default class SearchResultsRow extends Component {
       <TouchableNativeFeedback
         background={TouchableNativeFeedback.SelectableBackground()}
         onPress={this._onUserSelectListItem}>
-      <View
-        style={styles.container}>
         <View
-          style={styles.textContainer}
-          pointerEvents={'none'}>
+          style={styles.textContainer}>
           <Text
             style={styles.title}
             pointerEvents={'none'}>
@@ -40,7 +37,6 @@ export default class SearchResultsRow extends Component {
             {subtitle}
           </Text>
         </View>
-      </View>
       </TouchableNativeFeedback>
     )
   }
@@ -55,16 +51,18 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
+    height: 56,
+    paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 12,
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 15,
+    fontSize: 14,
     color: 'black',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#A4A4AC',
   },
 });

@@ -81,8 +81,7 @@ export default class SearchHeader extends Component {
   }
 
   getAnimatableStyles = () => {
-    const {visible, expanded, sourceText, destinationText, width} = this.props
-    // const {width: windowWidth} = Dimensions.get('window')
+    const {visible, expanded, sourceText, destinationText, width} = this.props;
     const paddedWidth = width - PADDING_SIDES*2;
 
     return {
@@ -234,7 +233,6 @@ export default class SearchHeader extends Component {
 const styles = StyleSheet.create({
   container: {
     zIndex: 1,
-    // height: 136,
     width: '100%',
   },
   hoverbar: {

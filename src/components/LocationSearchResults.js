@@ -19,8 +19,6 @@ export default class LocationSearchHeader extends Component {
 
   render() {
 
-    console.log('render');
-
     const {
       visible,
       onPress,
@@ -49,8 +47,8 @@ export default class LocationSearchHeader extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    zIndex: 1,
+    zIndex: 0,
     position: 'absolute',
-    backgroundColor: 'white',
+    backgroundColor: '#EEEEEE',
   },
 })

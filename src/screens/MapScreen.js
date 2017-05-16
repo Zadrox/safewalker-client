@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dimensions, StyleSheet, View, TouchableNativeFeedback, StatusBar } from 'react-native';
+import { Dimensions, StyleSheet, View, TouchableNativeFeedback, StatusBar, Text } from 'react-native';
 
 import MapView from 'react-native-maps';
 import { Container, Icon } from 'native-base';
@@ -12,6 +12,7 @@ import SearchResultsList from '../components/SearchResultsList';
 import NavButton from '../components/NavButton';
 import PreviewRequest from '../components/PreviewRequest';
 import BezierCurve from '../utils/BezierCurve';
+import LocationMarker from '../components/LocationMarker';
 
 import Constants from '../constants'
 
@@ -28,6 +29,7 @@ export default class App extends Component {
       destinationText: '',
       destination: null,
       sourceText: '',
+      showsUserLocation: true,
       source: null,
       focusedItem: '',
       polyLineCoords: null,
@@ -77,6 +79,28 @@ export default class App extends Component {
 
   }
 
+  openSearchModal = () => {
+    RNGooglePlaces.openPlacePickerModal()
+    .then((place) => {
+      const { name, address, latitude, longitude } = place;
+      const { focusedItem } = this.state;
+
+      const location = {
+        name,
+        address,
+        latitude,
+        longitude
+      };
+
+      let compiledState = focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
+        { destinationText: name, destination: location } :
+        { sourceText: name, source: location };
+
+      this.setState(compiledState, this._onBothSrcDestSet);
+    })
+    .catch(error => console.log(error.message));  // error is a Javascript Error object
+  }
+
   _retrieveLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -114,7 +138,7 @@ export default class App extends Component {
     this.setState({
       height: windowHeight,
       width: windowWidth,
-    }, () => console.log(this.state));
+    });
   }
 
   async _onUserSelectListItem(item) {
@@ -136,9 +160,14 @@ export default class App extends Component {
   }
 
   _onBothSrcDestSet = () => {
+
+    const { source, destination } = this.state;
+    if (!source || !destination) return;
+
     this.setState({
       searchResultsOpen: false,
       previewRequestOpen: true,
+      showsUserLocation: false,
       markers: [this.state.source, this.state.destination],
       polyLineCoords: BezierCurve(this.state.source, this.state.destination)
     }, () => {
@@ -146,9 +175,9 @@ export default class App extends Component {
         this.state.polyLineCoords,
         {
           edgePadding: {
-            top: 150,
+            top: 50,
             right: 25,
-            bottom: 350,
+            bottom: 300,
             left: 25,
           },
         animated: true
@@ -162,8 +191,6 @@ export default class App extends Component {
   }
 
   cancelRequest = () => {
-    // TODO: need to reest state.
-
     this.setState({
       previewRequestOpen: false,
       destination: null,
@@ -171,6 +198,7 @@ export default class App extends Component {
       markers: [],
       autocompleteLocations: [],
       polyLineCoords: null,
+      showsUserLocation: true,
     });
   }
 
@@ -179,11 +207,11 @@ export default class App extends Component {
   }
 
   _onTextInputFocus = (focusedItem) => {
-    this.setState({focusedItem});
+    this.setState({focusedItem, autocompleteLocations: []});
   }
 
   _onRegionChange(region) {
-    this.setState({region});
+    // this.setState({region});
   }
 
   _onNoInputTimeout = () => {
@@ -224,6 +252,8 @@ export default class App extends Component {
   _onSourceTextChange = (text) => {
     const sourceText = text;
 
+    clearTimeout(this.state.timeoutId);
+
     this.setState( {
       sourceText,
       timeoutId: setTimeout(this._onNoInputTimeout, 750),
@@ -242,8 +272,10 @@ export default class App extends Component {
       destinationText,
       searchResultsOpen,
       previewRequestOpen,
+      showsUserLocation,
       width,
       height,
+      focusedItem,
       autocompleteLocations,
       showProgressBar
     } = this.state;
@@ -256,6 +288,7 @@ export default class App extends Component {
           translucent
           backgroundColor='rgba(100, 100, 100, 0.4)'
         />
+
         <NavButton
           searchResultsOpen={searchResultsOpen}
           previewRequestOpen={previewRequestOpen}
@@ -265,14 +298,14 @@ export default class App extends Component {
 
         <SearchHeader
           width={width}
-          onTextInputFocus={this._onTextInputFocus}
           expanded={searchResultsOpen}
           visible={!previewRequestOpen}
           sourceText={sourceText}
           destinationText={destinationText}
           onDestinationTextChange={this._onDestinationTextChange}
           onSourceTextChange={this._onSourceTextChange}
-          onPress={this.toggleSearchResults}/>
+          onPress={this.toggleSearchResults}
+          onTextInputFocus={this._onTextInputFocus}/>
 
         <LocationSearchResults
           width={width}
@@ -281,7 +314,10 @@ export default class App extends Component {
           <SearchResultsList
             list={autocompleteLocations}
             showProgressBar={showProgressBar}
-            onUserSelectListItem={this._onUserSelectListItem} />
+            focusedItem={focusedItem}
+            onGetCurrentLocation={this._retrieveLocation}
+            onUserSelectListItem={this._onUserSelectListItem}
+            openSearchModal={this.openSearchModal} />
         </LocationSearchResults>
 
         <View
@@ -302,30 +338,30 @@ export default class App extends Component {
           height={height}/>
 
         <MapView
-          showsUserLocation
+          showsUserLocation={showsUserLocation}
           showsMyLocationButton={false}
           showsCompass={false}
           pitchEnabled={false}
           showsPointsOfInterest={false}
           style={styles.map}
           ref={map => this.map = map}
-          initialRegion={this.state.region}
-          onRegionChange={this._onRegionChange}>
+          initialRegion={this.state.region}>
 
           {this.state.markers.map(({name, address, latitude, longitude}, index) =>
             (<MapView.Marker
               key={index}
-              coordinate={{latitude, longitude}}
-              title={name}/>
+              coordinate={{latitude, longitude}}>
+              <LocationMarker title={name}/>
+             </MapView.Marker>
             )
           )}
 
           {this.state.markers.length !== 0 && (
             <MapView.Polyline
               coordinates={this.state.polyLineCoords}
-              lineCap="square"
-              miterLimit={10}
-              strokeWidth={2}
+              lineCap="round"
+              miterLimit={15}
+              strokeWidth={1.5}
             />
           )}
 
