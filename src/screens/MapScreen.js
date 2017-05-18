@@ -5,6 +5,8 @@ import MapView from 'react-native-maps';
 import { Container, Icon } from 'native-base';
 import Geocoder from 'react-native-geocoder';
 import RNGooglePlaces from 'react-native-google-places';
+import { graphql, compose } from 'react-apollo';
+import gql from 'graphql-tag';
 
 import SearchHeader from '../components/SearchHeader';
 import LocationSearchResults from '../components/LocationSearchResults';
@@ -18,11 +20,12 @@ import Constants from '../constants'
 
 import _ from 'lodash';
 
-export default class App extends Component {
+class MapScreen extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      requestId: null,
       searchResultsOpen: false,
       showProgressBar: false,
       previewRequestOpen: false,
@@ -129,6 +132,10 @@ export default class App extends Component {
     this.map.animateToCoordinate(location.coords, 1000);
   }
 
+  setRequestId = (requestId) => {
+    this.setState({requestId});
+  }
+
   _onLayout = () => {
     const {
       width: windowWidth,
@@ -190,7 +197,7 @@ export default class App extends Component {
     this.props.navigation.navigate('DrawerOpen');
   }
 
-  cancelRequest = () => {
+  cancelPendingRequest = () => {
     this.setState({
       previewRequestOpen: false,
       destination: null,
@@ -200,10 +207,6 @@ export default class App extends Component {
       polyLineCoords: null,
       showsUserLocation: true,
     });
-  }
-
-  submitRequest = () => {
-    // TODO: dispatch action to say I want somebody to come!
   }
 
   _onTextInputFocus = (focusedItem) => {
@@ -267,12 +270,17 @@ export default class App extends Component {
   }
 
   render() {
+    // TODO: refactor search into its own component that manages its own state
+
     const {
       sourceText,
+      source,
       destinationText,
+      destination,
       searchResultsOpen,
       previewRequestOpen,
       showsUserLocation,
+      requestId,
       width,
       height,
       focusedItem,
@@ -294,7 +302,7 @@ export default class App extends Component {
           previewRequestOpen={previewRequestOpen}
           toggleSearchResults={this.toggleSearchResults}
           toggleDrawer={this.toggleDrawer}
-          cancelRequest={this.cancelRequest} />
+          cancelRequest={this.cancelPendingRequest} />
 
         <SearchHeader
           width={width}
@@ -334,6 +342,11 @@ export default class App extends Component {
 
         <PreviewRequest
           visible={previewRequestOpen}
+          pendingRequest={requestId ? true : false}
+          requestId={requestId}
+          destination={destination}
+          source={source}
+          setRequestId={this.setRequestId}
           width={width}
           height={height}/>
 
@@ -405,3 +418,5 @@ const styles = {
     height: '100%',
   }
 };
+
+export default MapScreen;
