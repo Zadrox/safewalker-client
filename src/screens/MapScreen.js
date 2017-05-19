@@ -26,6 +26,8 @@ class MapScreen extends Component {
 
     this.state = {
       requestId: null,
+      walkerId: null,
+      walker: null,
       searchResultsOpen: false,
       showProgressBar: false,
       previewRequestOpen: false,
@@ -136,6 +138,14 @@ class MapScreen extends Component {
     this.setState({requestId});
   }
 
+  setWalkerId = (walkerId) => {
+    this.setState({walkerId});
+  }
+
+  setWalker = (walker) => {
+    this.setState({walker});
+  }
+
   _onLayout = () => {
     const {
       width: windowWidth,
@@ -199,6 +209,20 @@ class MapScreen extends Component {
 
   cancelPendingRequest = () => {
     this.setState({
+      previewRequestOpen: false,
+      destination: null,
+      destinationText: "",
+      markers: [],
+      autocompleteLocations: [],
+      polyLineCoords: null,
+      showsUserLocation: true,
+    });
+  }
+
+  cancelRequest = () => {
+    this.setState({
+      requestId: null,
+      walkerId: null,
       previewRequestOpen: false,
       destination: null,
       destinationText: "",
@@ -281,6 +305,8 @@ class MapScreen extends Component {
       previewRequestOpen,
       showsUserLocation,
       requestId,
+      walkerId,
+      walker,
       width,
       height,
       focusedItem,
@@ -302,7 +328,7 @@ class MapScreen extends Component {
           previewRequestOpen={previewRequestOpen}
           toggleSearchResults={this.toggleSearchResults}
           toggleDrawer={this.toggleDrawer}
-          cancelRequest={this.cancelPendingRequest} />
+          cancelPendingRequest={this.cancelPendingRequest} />
 
         <SearchHeader
           width={width}
@@ -343,10 +369,15 @@ class MapScreen extends Component {
         <PreviewRequest
           visible={previewRequestOpen}
           pendingRequest={requestId ? true : false}
+          cancelRequestState={this.cancelRequest}
           requestId={requestId}
+          walkerId={walkerId}
+          walker={walker}
           destination={destination}
           source={source}
           setRequestId={this.setRequestId}
+          setWalkerId={this.setWalkerId}
+          setWalker={this.setWalker}
           width={width}
           height={height}/>
 
@@ -377,6 +408,12 @@ class MapScreen extends Component {
               strokeWidth={1.5}
             />
           )}
+
+          {walker &&
+            <MapView.Marker
+              coordinate={{latitude: walker.latitude, longitude: walker.longitude}}
+              title={walker.name}
+            />}
 
         </MapView>
 

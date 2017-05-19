@@ -6,9 +6,10 @@ import {
   Text,
   StyleSheet,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { Button } from 'native-base';
+import { Button, Thumbnail } from 'native-base';
 
 import { graphql, compose } from 'react-apollo';
 import gql from 'graphql-tag';
@@ -20,6 +21,7 @@ class PreviewRequest extends Component {
     super(props);
 
     this.requestSubscription = null;
+    this.walkerSubscription = null;
   }
 
   _onSubmitRequestButtonPressed = () => {
@@ -27,18 +29,71 @@ class PreviewRequest extends Component {
 
     submitRequest({ source, destination, requestorId })
     .then( ({ data: { createRequest: { changedRequest: { id } } } }) => {
+      // TODO this to be refactored to redux.
       setRequestId(id);
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    const { subscribeToRequestUpdates, requestId, request } = nextProps;
-    const { requestId: oldRequestId } = this.props;
+    // TODO: I REALLY NEED REDUX ~.~
+    const {
+      setWalkerId,
+      setWalker,
+      walker,
+      subscribeToRequestUpdates,
+      subscribeToWalkerLocation,
+      request,
+      requestId,
+      walkerId
+    } = nextProps;
 
+    const {
+      requestId: oldRequestId,
+      walkerId: oldWalkerId,
+      request: oldRequest,
+      walker: oldWalker
+    } = this.props;
+
+    // UNASSIGNED
     if (!this.requestSubscription && requestId && requestId !== oldRequestId) {
-      console.log('here');
       this.requestSubscription = subscribeToRequestUpdates({requestId});
     }
+
+    // ASSIGNED
+    if (request &&
+        request.getRequest &&
+        request.getRequest.assigned &&
+        request.getRequest.assigned.walker &&
+        request.getRequest.assigned.walker.id !== oldWalkerId) {
+      // TODO this to be refactored to redux.
+      setWalkerId(request.getRequest.assigned.walker.id);
+      setWalker(request.getRequest.assigned.walker);
+    }
+
+    // ASSIGNED PT2
+    if (!this.walkerSubscription &&
+        request &&
+        !request.loading &&
+        (request.getRequest.status == "ASSIGNED" || request.getRequest.status == "ARRIVED") &&
+        walkerId &&
+        walkerId !== oldWalkerId) {
+      this.walkerSubscription = subscribeToWalkerLocation({walkerId});
+    }
+
+    if (this.walkerSubscription && walker && walker.getUser) {
+      setWalker(walker.getUser);
+    }
+
+    // IN PROGRESS
+    if (this.walkerSubscription &&
+        request &&
+        !request.loading &&
+        request.getRequest.status == "INPROGRESS") {
+      this.walkerSubscription();
+      this.walkerSubscription = null;
+      setWalker(null);
+    }
+
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -48,20 +103,186 @@ class PreviewRequest extends Component {
   }
 
   _onCancelRequestButtonPressed = () => {
-    const { cancelRequest, requestId, setRequestId } = this.props;
+    const { cancelRequest, cancelRequestState, requestId, walkerId, setRequestId, setWalkerId } = this.props;
 
-    this.requestSubscription && this.requestSubscription();
-
-    this.requestSubscription = null;
+    this._cleanupSubscriptions();
 
     cancelRequest({id: requestId})
-    .then(() => setRequestId(null));
+    .then(() => {
+      cancelRequestState();
+    });
+  }
+
+  _onCompleteRequestButtonPressed = () => {
+    const { cancelRequestState } = this.props;
+
+    this._cleanupSubscriptions();
+
+    cancelRequestState();
+  }
+
+  _cleanupSubscriptions() {
+    this.requestSubscription && this.requestSubscription();
+    this.walkerSubscription && this.walkerSubscription();
+
+    this.requestSubscription = null;
+    this.walkerSubscription = null;
   }
 
   componentWillUnmount() {
-    this.requestSubscription && this.requestSubscription();
+    this._cleanupSubscriptions();
+  }
 
-    this.requestSubscription = null;
+  renderContent(style) {
+    const { visible, pendingRequest, request, walker } = this.props;
+
+    if (!request) {
+      return (
+        <View style={styles.content}>
+          <Text style={{textAlign: 'center'}}>{"Services provided by:"}</Text>
+          <Image
+            style={{width: style.width - 32, height: style.height - 115}}
+            resizeMode="contain"
+            source={{uri: 'https://subprint.ca/images/website/su_logo_footer.png'}}/>
+        </View>
+      );
+    }
+    if (request && request.loading) {
+      return (
+        <View style={styles.content}>
+          <Text style={{textAlign: 'center'}}>{"Searching for Safewalker"}</Text>
+          <ActivityIndicator
+            style={{marginTop: 12}}
+            size="large"
+            color="#4CAF50"
+            animating
+          />
+        </View>
+      );
+    }
+    switch(request.getRequest.status) {
+      case "UNASSIGNED":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center'}}>{"Searching for Safewalker"}</Text>
+            <ActivityIndicator
+              style={{marginTop: 12}}
+              size="large"
+              color="#4CAF50"
+              animating
+            />
+          </View>
+        );
+      case "ASSIGNED":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center', fontSize: 20}}>
+              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assigned.walker.name}</Text> is on his way
+            </Text>
+          </View>
+        );
+      case "ARRIVED":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center', fontSize: 20}}>
+              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assigned.walker.name}</Text> has arrived
+            </Text>
+          </View>
+        );
+      case "INPROGRESS":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center'}}>Transit in Progress</Text>
+          </View>
+        );
+      case "COMPLETED":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center'}}>Journey Completed</Text>
+          </View>
+        );
+      default:
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center'}}>Error...</Text>
+          </View>
+        );
+    }
+  }
+
+  renderIcon() {
+    const { request } = this.props;
+
+    if (!request || request.loading ) return (<View/>);
+
+    if (request.getRequest.status == 'ASSIGNED' || request.getRequest.status == 'ARRIVED') {
+      return (
+        <View style={styles.thumbnailBorder}>
+          <Thumbnail size={56} source={{uri: 'https://avatars3.githubusercontent.com/u/7960861?v=3&s=460'}}/>
+        </View>
+      );
+    }
+
+    return (<View/>);
+  }
+
+  renderButton(buttonStyle) {
+    const { request } = this.props;
+
+    if (!request) {
+      return (
+        <Button
+          block
+          info
+          onPress={this._onSubmitRequestButtonPressed}
+          style={buttonStyle}>
+          <Text>{"Request Safewalk"}</Text>
+        </Button>
+      );
+    }
+    if (request && request.loading) {
+      return (
+        <Button
+          block
+          danger
+          onPress={this._onCancelRequestButtonPressed}
+          style={buttonStyle}>
+          <Text>{"Cancel Pending Request"}</Text>
+        </Button>
+      );
+    }
+    switch(request.getRequest.status) {
+      case "UNASSIGNED":
+        return (
+          <Button
+            block
+            danger
+            onPress={this._onCancelRequestButtonPressed}
+            style={buttonStyle}>
+            <Text>{"Cancel Pending Request"}</Text>
+          </Button>
+        );
+      case "ASSIGNED":
+        return (
+          <Button
+            block
+            danger
+            onPress={this._onCancelRequestButtonPressed}
+            style={buttonStyle}>
+            <Text>{"Cancel Pending Request"}</Text>
+          </Button>
+        );
+      case "COMPLETED":
+        return (
+          <Button
+            block
+            success
+            onPress={this._onCompleteRequestButtonPressed}
+            style={buttonStyle}>
+            <Text>{"Ok"}</Text>
+          </Button>
+        );
+    }
   }
 
   render() {
@@ -69,6 +290,7 @@ class PreviewRequest extends Component {
       visible,
       pendingRequest,
       request,
+      walker,
       width: windowWidth,
       height: windowHeight,
     } = this.props;
@@ -76,9 +298,9 @@ class PreviewRequest extends Component {
     const containerHeader = 175;
 
     const style = {
-      top: visible ? windowHeight - containerHeader : windowHeight,
-      height: containerHeader,
-      width: windowWidth - 32,
+      top: visible ? windowHeight - containerHeader - 30 : windowHeight,
+      height: containerHeader + 30,
+      paddingTop: 30
     }
 
     const buttonStyle = {
@@ -90,30 +312,13 @@ class PreviewRequest extends Component {
         style={[styles.container, style]}
         duration={250}
         easing="ease-out"
-        transition={["top", "height", "width"]}>
-        <View style={styles.content}>
-          <Text>{"Services provided by:"}</Text>
-          <Image
-            style={{width: style.width - 32, height: style.height - 115}}
-            resizeMode="contain"
-            source={{uri: 'https://subprint.ca/images/website/su_logo_footer.png'}}/>
+        transition={["top"]}>
+        {this.renderIcon()}
+        <View key={2} style={[styles.innerContainer, {height: containerHeader, width: windowWidth - 32}]}>
+          {this.renderContent({height: containerHeader, width: windowWidth - 32})}
+          <View style={styles.separator} />
+          {this.renderButton(buttonStyle)}
         </View>
-        <View style={styles.separator} />
-        {request && request.getRequest && <Text>{request.getRequest.status}</Text>}
-        {pendingRequest && <Button
-          block
-          danger
-          onPress={this._onCancelRequestButtonPressed}
-          style={buttonStyle}>
-          <Text>{"Cancel Pending Request"}</Text>
-        </Button>}
-        {!pendingRequest && <Button
-          block
-          info
-          onPress={this._onSubmitRequestButtonPressed}
-          style={buttonStyle}>
-          <Text>{"Request Safewalk"}</Text>
-        </Button>}
       </Animatable.View>
     );
   }
@@ -122,20 +327,42 @@ class PreviewRequest extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    zIndex: 1,
+    alignItems: 'center',
+    position: 'absolute',
+    backgroundColor: 'transparent',
+  },
+  innerContainer: {
+    flex: 1,
+    alignItems: 'center',
     elevation: 8,
     marginLeft: 16,
     marginRight: 16,
+    justifyContent: 'center',
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
-    zIndex: 1,
-    position: 'absolute',
     backgroundColor: 'white',
+  },
+  thumbnailBorder: {
+    position: 'absolute',
+    top: 0,
+    flex: 1,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
+    elevation: 8,
+    width: 60,
+    height: 60,
+    borderRadius: 30
   },
   content: {
     flex: 1,
-    margin: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   separator: {
+    width: '100%',
     height: 2,
     backgroundColor: '#EDEDED',
   }
@@ -206,7 +433,7 @@ const REQUEST_SUBSCRIPTION = gql`
           id
           walker {
             id
-            username
+            name
             latitude
             longitude
           }
@@ -226,7 +453,7 @@ const withRequestData = graphql(
           id
           walker {
             id
-            username
+            name
             latitude
             longitude
           }
@@ -254,11 +481,9 @@ const withRequestData = graphql(
                 return prev;
               }
 
-              const nextState = Object.assign({}, {
+              return Object.assign({}, {
                 getRequest: subscriptionData.data.subscribeToRequest.value
               });
-
-              return nextState;
             }
           });
         }
@@ -267,8 +492,66 @@ const withRequestData = graphql(
   }
 );
 
+const WALKER_SUBSCRIPTION = gql`
+  subscription onWalkerChanged($filter: UserSubscriptionFilter, $mutations: [UserMutationEvent]!) {
+    subscribeToUser(filter: $filter, mutations: $mutations) {
+      value {
+        id
+        latitude
+        longitude
+      }
+    }
+  }
+`;
+
+const withWalkerLocationData = graphql(
+  gql`
+    query walkerLocation($id: ID!) {
+      getUser(id: $id) {
+        id
+        username
+        latitude
+        longitude
+      }
+    }
+  `,
+  {
+    name: 'walker',
+    skip: (ownProps) => ownProps.walkerId ? false : true,
+    options: (ownProps) => ({ variables: { id: ownProps.walkerId }}),
+    props: ({ownProps, walker}) => {
+      return {
+        walker,
+        subscribeToWalkerLocation: ({walkerId}) => {
+          return walker.subscribeToMore({
+            document: WALKER_SUBSCRIPTION,
+            variables: {
+              filter: { id: { eq: walkerId }},
+              mutations: ["updateUser"]
+            },
+            updateQuery: (prev, {subscriptionData}) => {
+              if (!subscriptionData.data) {
+                return prev;
+              }
+
+              const { longitude, latitude } = subscriptionData.data.subscribeToUser.value;
+              const nextState = Object.assign({}, prev);
+
+              nextState.getUser.longitude = longitude;
+              nextState.getUser.latitude = latitude;
+
+              return nextState;
+            }
+          })
+        }
+      }
+    }
+  }
+)
+
 export default compose(
   withCreateRequestMutation,
   withCancelRequestMutation,
   withRequestData,
+  withWalkerLocationData,
 )(PreviewRequest);

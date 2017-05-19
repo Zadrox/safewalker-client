@@ -16,12 +16,12 @@ export default class NavButton extends Component {
       searchResultsOpen,
       toggleSearchResults,
       previewRequestOpen,
-      cancelRequest,
+      cancelPendingRequest,
       toggleDrawer
     } = this.props;
 
     if (previewRequestOpen) {
-      cancelRequest();
+      cancelPendingRequest();
     } else if (searchResultsOpen){
       toggleSearchResults();
     } else {
