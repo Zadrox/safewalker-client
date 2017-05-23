@@ -393,8 +393,18 @@ const withCreateRequestMutation = graphql(
   {
     props: ({ownProps, mutate}) => ({
       submitRequest: ({ source, destination, requestorId }) => {
+        const { latitude: srcLat, longitude: srcLng } = source;
+        const { latitude: destLat, longitude: destLng } = destination;
         return mutate({
-          variables: { input: { source, destination, requestorId }}
+          variables: { input: {
+            source,
+            destination,
+            requestorId,
+            srcLat,
+            srcLng,
+            destLat,
+            destLng
+          }}
         });
       }
     }),
@@ -429,9 +439,9 @@ const REQUEST_SUBSCRIPTION = gql`
       value {
         status
         id
-        assigned {
+        assignment {
           id
-          walker {
+          safewalker {
             id
             name
             latitude
@@ -449,9 +459,9 @@ const withRequestData = graphql(
       getRequest(id: $id) {
         status
         id
-        assigned {
+        assignment {
           id
-          walker {
+          safewalker {
             id
             name
             latitude
