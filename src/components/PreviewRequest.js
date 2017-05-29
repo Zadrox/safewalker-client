@@ -54,6 +54,8 @@ class PreviewRequest extends Component {
       walker: oldWalker
     } = this.props;
 
+
+
     // UNASSIGNED
     if (!this.requestSubscription && requestId && requestId !== oldRequestId) {
       this.requestSubscription = subscribeToRequestUpdates({requestId});
@@ -62,12 +64,13 @@ class PreviewRequest extends Component {
     // ASSIGNED
     if (request &&
         request.getRequest &&
-        request.getRequest.assigned &&
-        request.getRequest.assigned.walker &&
-        request.getRequest.assigned.walker.id !== oldWalkerId) {
+        request.getRequest.assignment &&
+        request.getRequest.assignment.safewalker &&
+        request.getRequest.assignment.safewalker.id !== oldWalkerId &&
+        request.getRequest.status !== "COMPLETED") {
       // TODO this to be refactored to redux.
-      setWalkerId(request.getRequest.assigned.walker.id);
-      setWalker(request.getRequest.assigned.walker);
+      setWalkerId(request.getRequest.assignment.safewalker.id);
+      setWalker(request.getRequest.assignment.safewalker);
     }
 
     // ASSIGNED PT2
@@ -92,6 +95,7 @@ class PreviewRequest extends Component {
       this.walkerSubscription();
       this.walkerSubscription = null;
       setWalker(null);
+      setWalkerId(null);
     }
 
   }
@@ -176,16 +180,16 @@ class PreviewRequest extends Component {
       case "ASSIGNED":
         return (
           <View style={styles.content}>
-            <Text style={{textAlign: 'center', fontSize: 20}}>
-              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assigned.walker.name}</Text> is on his way
+            <Text style={{textAlign: 'center'}}>
+              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assignment.safewalker.name}</Text> is on his way
             </Text>
           </View>
         );
       case "ARRIVED":
         return (
           <View style={styles.content}>
-            <Text style={{textAlign: 'center', fontSize: 20}}>
-              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assigned.walker.name}</Text> has arrived
+            <Text style={{textAlign: 'center'}}>
+              <Text style={{fontWeight: 'bold'}}>{request.getRequest.assignment.safewalker.name}</Text> has arrived
             </Text>
           </View>
         );
@@ -199,6 +203,12 @@ class PreviewRequest extends Component {
         return (
           <View style={styles.content}>
             <Text style={{textAlign: 'center'}}>Journey Completed</Text>
+          </View>
+        );
+      case "CANCELLED":
+        return (
+          <View style={styles.content}>
+            <Text style={{textAlign: 'center'}}>Request Cancelled By Walker</Text>
           </View>
         );
       default:
@@ -218,7 +228,7 @@ class PreviewRequest extends Component {
     if (request.getRequest.status == 'ASSIGNED' || request.getRequest.status == 'ARRIVED') {
       return (
         <View style={styles.thumbnailBorder}>
-          <Thumbnail size={56} source={{uri: 'https://avatars3.githubusercontent.com/u/7960861?v=3&s=460'}}/>
+          <Thumbnail size={56} source={require('../../static/pooh.jpg')}/>
         </View>
       );
     }
@@ -282,6 +292,18 @@ class PreviewRequest extends Component {
             <Text>{"Ok"}</Text>
           </Button>
         );
+      case "CANCELLED":
+        return (
+          <Button
+            block
+            danger
+            onPress={this._onCancelRequestButtonPressed}
+            style={buttonStyle}>
+            <Text>{"Ok"}</Text>
+          </Button>
+        );
+      default:
+        return (<View/>);
     }
   }
 
@@ -507,6 +529,7 @@ const WALKER_SUBSCRIPTION = gql`
     subscribeToUser(filter: $filter, mutations: $mutations) {
       value {
         id
+        username
         latitude
         longitude
       }
@@ -550,7 +573,9 @@ const withWalkerLocationData = graphql(
               nextState.getUser.longitude = longitude;
               nextState.getUser.latitude = latitude;
 
-              return nextState;
+              console.log(nextState);
+
+              return { getUser: subscriptionData.data.subscribeToUser.value };
             }
           })
         }

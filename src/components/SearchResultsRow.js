@@ -5,12 +5,6 @@ import { Icon } from 'native-base';
 
 export default class SearchResultsRow extends Component {
 
-  static defaultProps = {
-    icon: 'pizza',
-    title: 'Home',
-    subtitle: 'Earth'
-  }
-
   _onUserSelectListItem = () => {
     const {onUserSelectListItem} = this.props;
 
@@ -46,7 +40,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 25,
-    height: 56,
+    minHeight: 56,
     flexDirection: 'row',
   },
   textContainer: {

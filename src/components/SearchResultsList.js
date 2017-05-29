@@ -68,8 +68,6 @@ export default class SearchResultsList extends Component {
 
     const { list, showProgressBar, focusedItem } = this.props;
 
-    // console.warn(focusedItem);
-
     if (list.length === 0 && !showProgressBar) {
       return (
         <Container>
@@ -82,7 +80,7 @@ export default class SearchResultsList extends Component {
                   onPress={this.onGetCurrentLocation}
                   background={TouchableNativeFeedback.SelectableBackground()}>
                   <View
-                    style={{flex: 1, height: 48, flexDirection: 'row', alignItems: 'center'}}>
+                    style={{flex: 1, height: 56, flexDirection: 'row', alignItems: 'center'}}>
                     <Icon style={{marginLeft: 16, marginRight: 16, fontSize: 24, color: '#2196F3'}} name="locate"/>
                     <Text>{"Use Current Location"}</Text>
                   </View>
@@ -94,7 +92,7 @@ export default class SearchResultsList extends Component {
                   onPress={this.openSearchModal}
                   background={TouchableNativeFeedback.SelectableBackground()}>
                   <View
-                    style={{flex: 1, height: 48, flexDirection: 'row', alignItems: 'center'}}>
+                    style={{flex: 1, height: 56, flexDirection: 'row', alignItems: 'center'}}>
                     <Icon style={{marginLeft: 19, marginRight: 19, fontSize: 24, color: '#9E9E9E'}} name="pin"/>
                     <Text>{"Pick a Nearby Location"}</Text>
                   </View>
@@ -106,11 +104,19 @@ export default class SearchResultsList extends Component {
       );
     } else if (this.props.showProgressBar) {
       return (
-        <ActivityIndicator
-          size="large"
-          color="#4CAF50"
-          animating={this.props.showProgressBar}
-        />
+        <Container>
+          <Content
+            style={{marginLeft: 8, marginRight: 8, marginTop: 4}}>
+            <Card
+              style={{height: 56, alignContent: 'center', justifyContent: 'center'}}>
+              <ActivityIndicator
+                size="large"
+                color="#4CAF50"
+                animating={this.props.showProgressBar}
+              />
+            </Card>
+          </Content>
+        </Container>
       );
     }
 

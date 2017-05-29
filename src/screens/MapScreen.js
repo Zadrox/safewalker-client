@@ -15,6 +15,7 @@ import NavButton from '../components/NavButton';
 import PreviewRequest from '../components/PreviewRequest';
 import BezierCurve from '../utils/BezierCurve';
 import LocationMarker from '../components/LocationMarker';
+import PersonMarker from '../components/PersonMarker';
 
 import Constants from '../constants'
 
@@ -127,6 +128,11 @@ class MapScreen extends Component {
       this.setState({
         sourceText: "Current Location",
         source: { name, address: res[0].formattedAddress, latitude: lat, longitude: lng },
+        region: {
+          ...location.coords,
+          latitudeDelta: 0.0222,
+          longitudeDelta: 0.0121,
+        }
       });
     })
     .catch(err => console.error(err));
@@ -143,6 +149,7 @@ class MapScreen extends Component {
   }
 
   setWalker = (walker) => {
+    if (this.state.walkerId)
     this.setState({walker});
   }
 
@@ -228,6 +235,7 @@ class MapScreen extends Component {
       destinationText: "",
       markers: [],
       autocompleteLocations: [],
+      walker: null,
       polyLineCoords: null,
       showsUserLocation: true,
     });
@@ -248,21 +256,28 @@ class MapScreen extends Component {
       focusedItem === Constants.searchHeader.DESTINATION_INPUT ?
       destinationText : sourceText;
 
-    this.setState({showProgressBar: true});
+    if (searchText.length === 0) {
+      this.setState({
+        showProgressBar: false,
+        autocompleteLocations: [],
+      });
+      return;
+    }
 
     RNGooglePlaces.getAutocompletePredictions(searchText, {
       type: 'establishments',
-      latitude: this.state.region.latitude,
-      longitude: this.state.region.longitude,
+      latitude: region.latitude,
+      longitude: region.longitude,
       radius: 0.5
     })
     .then((places) => {
+
       this.setState({
         autocompleteLocations: places,
         showProgressBar: false
       });
     })
-    .catch(error => console.log(error.message));
+    .catch(error => console.log(error));
   }
 
   _onDestinationTextChange = (text) => {
@@ -271,8 +286,9 @@ class MapScreen extends Component {
     clearTimeout(this.state.timeoutId);
 
     this.setState( {
+      showProgressBar: true,
       destinationText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 750),
+      timeoutId: setTimeout(this._onNoInputTimeout, 300),
     } );
   }
 
@@ -282,8 +298,9 @@ class MapScreen extends Component {
     clearTimeout(this.state.timeoutId);
 
     this.setState( {
+      showProgressBar: true,
       sourceText,
-      timeoutId: setTimeout(this._onNoInputTimeout, 750),
+      timeoutId: setTimeout(this._onNoInputTimeout, 300),
     } );
   }
 
@@ -372,7 +389,6 @@ class MapScreen extends Component {
           cancelRequestState={this.cancelRequest}
           requestId={requestId}
           walkerId={walkerId}
-          walker={walker}
           destination={destination}
           source={source}
           setRequestId={this.setRequestId}
@@ -409,11 +425,13 @@ class MapScreen extends Component {
             />
           )}
 
-          {walker &&
+          {walker && walkerId != 0 &&
             <MapView.Marker
               coordinate={{latitude: walker.latitude, longitude: walker.longitude}}
-              title={walker.name}
-            />}
+              centerOffset={{x: 0, y: 8}}>
+              <PersonMarker/>
+            </MapView.Marker>
+            }
 
         </MapView>
 

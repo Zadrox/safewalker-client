@@ -24,7 +24,7 @@ export default BezierCurve = function(src, dest) {
 
   curvepts.push({latitude: src.latitude, longitude: src.longitude});
 
-  const step = 1.0/33;
+  const step = 1.0/200;
 
   for (let stepping = 0; stepping <= 1.0; stepping += step) {
       const invStepping = (1.0 - stepping);
