@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import { ListView, View, Text, StyleSheet, ActivityIndicator, TouchableNativeFeedback, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Card, Content, Body, CardItem, Button, Icon, Container } from 'native-base';
 
-import Constants from '../constants'
-import SearchResultsRow from './SearchResultsRow'
+import Constants from '../constants';
+import SearchResultsRow from './SearchResultsRow';
+import TouchableCardRow from './TouchableCardRow';
 
 const rowHasChanged = (r1, r2) => r1.placeID !== r2.placeID;
 
@@ -46,7 +47,6 @@ export default class SearchResultsList extends Component {
   }
 
   renderRow = (rowData) => {
-    // const {title, subtitle, icon} = rowData;
     const { primaryText, secondaryText } = rowData;
 
     return (
@@ -75,29 +75,18 @@ export default class SearchResultsList extends Component {
             style={{marginLeft: 8, marginRight: 8, marginTop: 4}}
             keyboardShouldPersistTaps='handled'>
             <Card>
-              {focusedItem === Constants.searchHeader.SOURCE_INPUT && <View style={{padding: 0}}>
-                <TouchableNativeFeedback
-                  onPress={this.onGetCurrentLocation}
-                  background={TouchableNativeFeedback.SelectableBackground()}>
-                  <View
-                    style={{flex: 1, height: 56, flexDirection: 'row', alignItems: 'center'}}>
-                    <Icon style={{marginLeft: 16, marginRight: 16, fontSize: 24, color: '#2196F3'}} name="locate"/>
-                    <Text>{"Use Current Location"}</Text>
-                  </View>
-                </TouchableNativeFeedback>
-              </View>}
+              {focusedItem === Constants.searchHeader.SOURCE_INPUT &&
+              <TouchableCardRow
+                text={"Use Current Location"}
+                onPress={this.getCurrentLocation}
+                color={"#2196F3"}
+                icon={"locate"}/>}
               {focusedItem === Constants.searchHeader.SOURCE_INPUT && <View style={styles.separator}/>}
-              <View style={{padding: 0}}>
-                <TouchableNativeFeedback
-                  onPress={this.openSearchModal}
-                  background={TouchableNativeFeedback.SelectableBackground()}>
-                  <View
-                    style={{flex: 1, height: 56, flexDirection: 'row', alignItems: 'center'}}>
-                    <Icon style={{marginLeft: 19, marginRight: 19, fontSize: 24, color: '#9E9E9E'}} name="pin"/>
-                    <Text>{"Pick a Nearby Location"}</Text>
-                  </View>
-                </TouchableNativeFeedback>
-              </View>
+              <TouchableCardRow
+                text={"Pick from Nearby Locations"}
+                onPress={this.openSearchModal}
+                color={"#BBBBBB"} 
+                icon={"pin"}/>
             </Card>
           </Content>
         </Container>

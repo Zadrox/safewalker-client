@@ -29,13 +29,11 @@ class PreviewRequest extends Component {
 
     submitRequest({ source, destination, requestorId })
     .then( ({ data: { createRequest: { changedRequest: { id } } } }) => {
-      // TODO this to be refactored to redux.
       setRequestId(id);
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    // TODO: I REALLY NEED REDUX ~.~
     const {
       setWalkerId,
       setWalker,
@@ -54,26 +52,20 @@ class PreviewRequest extends Component {
       walker: oldWalker
     } = this.props;
 
-
-
-    // UNASSIGNED
     if (!this.requestSubscription && requestId && requestId !== oldRequestId) {
       this.requestSubscription = subscribeToRequestUpdates({requestId});
     }
 
-    // ASSIGNED
     if (request &&
         request.getRequest &&
         request.getRequest.assignment &&
         request.getRequest.assignment.safewalker &&
         request.getRequest.assignment.safewalker.id !== oldWalkerId &&
         request.getRequest.status !== "COMPLETED") {
-      // TODO this to be refactored to redux.
       setWalkerId(request.getRequest.assignment.safewalker.id);
       setWalker(request.getRequest.assignment.safewalker);
     }
 
-    // ASSIGNED PT2
     if (!this.walkerSubscription &&
         request &&
         !request.loading &&
@@ -87,7 +79,6 @@ class PreviewRequest extends Component {
       setWalker(walker.getUser);
     }
 
-    // IN PROGRESS
     if (this.walkerSubscription &&
         request &&
         !request.loading &&
