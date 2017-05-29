@@ -3,37 +3,26 @@ import { View, Text, Image, StyleSheet, TouchableNativeFeedback } from 'react-na
 
 import { Icon } from 'native-base';
 
-export default class SearchResultsRow extends Component {
-
-  _onUserSelectListItem = () => {
-    const {onUserSelectListItem} = this.props;
-
-    onUserSelectListItem();
-  }
-
-  render() {
-    const {title, subtitle} = this.props;
-
-    return (
-      <TouchableNativeFeedback
-        background={TouchableNativeFeedback.SelectableBackground()}
-        onPress={this._onUserSelectListItem}>
-        <View
-          style={styles.textContainer}>
-          <Text
-            style={styles.title}
-            pointerEvents={'none'}>
-            {title}
-          </Text>
-          <Text
-            style={styles.subtitle}
-            pointerEvents={'none'}>
-            {subtitle}
-          </Text>
-        </View>
-      </TouchableNativeFeedback>
-    )
-  }
+export default SearchResultsRow = ({title, subtitle, onUserSelectListItem}) => {
+  return (
+    <TouchableNativeFeedback
+      background={TouchableNativeFeedback.SelectableBackground()}
+      onPress={onUserSelectListItem}>
+      <View
+        style={styles.textContainer}>
+        <Text
+          style={styles.title}
+          pointerEvents={'none'}>
+          {title}
+        </Text>
+        <Text
+          style={styles.subtitle}
+          pointerEvents={'none'}>
+          {subtitle}
+        </Text>
+      </View>
+    </TouchableNativeFeedback>
+  );
 }
 
 const styles = StyleSheet.create({
